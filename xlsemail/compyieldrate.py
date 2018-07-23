@@ -148,7 +148,7 @@ def send_stub(full_name, desc_full):
     df_desc = None
     tp = None
     try:
-        df = pd.read_excel(full_name, sheetname='正文')
+        df = pd.read_excel(full_name, sheetname='正文').fillna('无抄送人')
         df_content = pd.read_excel(full_name, sheetname='配置')
         subject = df_content.columns[1]
         mail_begin = df_content.iloc[:, 1].values[0]
@@ -185,14 +185,15 @@ def send_stub(full_name, desc_full):
                 msg['To'] = ','.join(to_lists)
                 # 取抄送人列的值
                 to_c = tp.iloc[:, -1].values[0]
-                # 对抄送人邮箱地址进行校验,替换不规则字符
-                to_cc = to_c.strip().replace('，', ',').replace('；', ',').replace(';', ',').replace(' ', '')
                 to_ccs = []
-                for i_cc in to_cc.split(','):
-                    i_cc = i_cc.strip()
-                    if i_cc:
-                        to_ccs.append(_format_addr('<%s>' % i_cc))
-                msg['Cc'] = ','.join(to_ccs)
+                if to_c != '无抄送人':
+                    # 对抄送人邮箱地址进行校验,替换不规则字符
+                    to_cc = to_c.strip().replace('，', ',').replace('；', ',').replace(';', ',').replace(' ', '')
+                    for i_cc in to_cc.split(','):
+                        i_cc = i_cc.strip()
+                        if i_cc:
+                            to_ccs.append(_format_addr('<%s>' % i_cc))
+                    msg['Cc'] = ','.join(to_ccs)
                 msg['Subject'] = Header(subject, 'utf-8').encode()
                 # 删除发送人和抄送人
                 # tp_new = tp.drop(del_col, axis=1, inplace=False).copy()
